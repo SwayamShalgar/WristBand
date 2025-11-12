@@ -8,57 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 
-// Vital status helper - returns status level
-function getVitalStatusLevel(type, value) {
-  const ranges = {
-    hr: { critical: [60, 100], warning: [70, 90] },
-    temp: { critical: [36, 37.5], warning: [36.5, 37.2] },
-    spo2: { critical: 95, warning: 97 }
-  };
-  
-  const range = ranges[type];
-  if (!range) return 'normal';
-  
-  if (type === 'hr' || type === 'temp') {
-    if (value < range.critical[0] || value > range.critical[1]) return 'danger';
-    if (value < range.warning[0] || value > range.warning[1]) return 'moderate';
-    return 'normal';
-  } else if (type === 'spo2') {
-    if (value < range.critical) return 'danger';
-    if (value < range.warning) return 'moderate';
-    return 'normal';
-  }
-  
-  return 'normal';
-}
-
-// Vital status helper - returns color class
-function getVitalStatus(type, value) {
-  const level = getVitalStatusLevel(type, value);
-  if (level === 'danger') return 'text-red-500';
-  if (level === 'moderate') return 'text-yellow-500';
-  return 'text-green-500';
-}
-
-// Calculate overall patient status
-function getPatientStatus(record) {
-  const hrStatus = getVitalStatusLevel('hr', record.hr);
-  const tempStatus = getVitalStatusLevel('temp', record.temp);
-  const spo2Status = getVitalStatusLevel('spo2', record.spo2);
-  
-  // If any vital is in danger, patient is in danger
-  if (hrStatus === 'danger' || tempStatus === 'danger' || spo2Status === 'danger') {
-    return 'danger';
-  }
-  
-  // If any vital is moderate, patient is moderate
-  if (hrStatus === 'moderate' || tempStatus === 'moderate' || spo2Status === 'moderate') {
-    return 'moderate';
-  }
-  
-  return 'normal';
-}
-
 export default function VolunteerDashboard() {
   const [volunteer, setVolunteer] = useState(null);
   const [allUsersData, setAllUsersData] = useState([]);
@@ -66,6 +15,57 @@ export default function VolunteerDashboard() {
   const [error, setError] = useState(null);
   const router = useRouter();
   const supabase = useMemo(() => createClientComponentClient(), []);
+
+  // Vital status helper - returns status level
+  const getVitalStatusLevel = useCallback((type, value) => {
+    const ranges = {
+      hr: { critical: [60, 100], warning: [70, 90] },
+      temp: { critical: [36, 37.5], warning: [36.5, 37.2] },
+      spo2: { critical: 95, warning: 97 }
+    };
+    
+    const range = ranges[type];
+    if (!range) return 'normal';
+    
+    if (type === 'hr' || type === 'temp') {
+      if (value < range.critical[0] || value > range.critical[1]) return 'danger';
+      if (value < range.warning[0] || value > range.warning[1]) return 'moderate';
+      return 'normal';
+    } else if (type === 'spo2') {
+      if (value < range.critical) return 'danger';
+      if (value < range.warning) return 'moderate';
+      return 'normal';
+    }
+    
+    return 'normal';
+  }, []);
+
+  // Vital status helper - returns color class
+  const getVitalStatus = useCallback((type, value) => {
+    const level = getVitalStatusLevel(type, value);
+    if (level === 'danger') return 'text-red-500';
+    if (level === 'moderate') return 'text-yellow-500';
+    return 'text-green-500';
+  }, [getVitalStatusLevel]);
+
+  // Calculate overall patient status
+  const getPatientStatus = useCallback((record) => {
+    const hrStatus = getVitalStatusLevel('hr', record.hr);
+    const tempStatus = getVitalStatusLevel('temp', record.temp);
+    const spo2Status = getVitalStatusLevel('spo2', record.spo2);
+    
+    // If any vital is in danger, patient is in danger
+    if (hrStatus === 'danger' || tempStatus === 'danger' || spo2Status === 'danger') {
+      return 'danger';
+    }
+    
+    // If any vital is moderate, patient is moderate
+    if (hrStatus === 'moderate' || tempStatus === 'moderate' || spo2Status === 'moderate') {
+      return 'moderate';
+    }
+    
+    return 'normal';
+  }, [getVitalStatusLevel]);
 
   // Calculate analytics from all users data
   const analytics = useMemo(() => {
@@ -120,9 +120,10 @@ export default function VolunteerDashboard() {
       ],
       avgHR: (totalHR / total).toFixed(1),
       avgTemp: (totalTemp / total).toFixed(1),
-      avgSpO2: (totalSpO2 / total).toFixed(1)
+      avgSpO2: (totalSpO2 / total).toFixed(1),
+      totalCount: total
     };
-  }, [allUsersData]);
+  }, [allUsersData, getPatientStatus]);
 
   useEffect(() => {
     checkAuth();
