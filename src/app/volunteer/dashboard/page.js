@@ -59,9 +59,6 @@ function getPatientStatus(record) {
   return 'normal';
 }
 
-// Disable static generation
-export const dynamic = 'force-dynamic';
-
 export default function VolunteerDashboard() {
   const [volunteer, setVolunteer] = useState(null);
   const [allUsersData, setAllUsersData] = useState([]);
