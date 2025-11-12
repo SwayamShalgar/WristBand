@@ -7,10 +7,6 @@ import { Heart, LogOut, User, Users, Activity, Thermometer, Droplet, AlertCircle
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import dynamicImport from 'next/dynamic';
-
-// Dynamically import charts section to prevent SSR issues
-const ChartsSection = dynamicImport(() => import('@/components/ChartsSection'), { ssr: false });
 
 // Vital status helper - returns status level
 function getVitalStatusLevel(type, value) {
@@ -71,7 +67,6 @@ export default function VolunteerDashboard() {
   const [allUsersData, setAllUsersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const supabase = useMemo(() => createClientComponentClient(), []);
 
@@ -135,10 +130,6 @@ export default function VolunteerDashboard() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     if (volunteer) {
@@ -353,8 +344,51 @@ export default function VolunteerDashboard() {
                 </Card>
               </div>
 
-              {/* Charts */}
-              {isMounted && <ChartsSection analytics={analytics} />}
+              {/* Simple Bar Chart Visualization */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Patient Status Distribution */}
+                <Card className="p-6 bg-white border-gray-200">
+                  <h3 className="text-lg font-bold text-black mb-6">Patient Status Distribution</h3>
+                  <div className="space-y-4">
+                    {analytics.chartData.map((item, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-black">{item.name}</span>
+                          <span className="text-sm font-bold" style={{ color: item.color }}>{item.count}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${(item.count / analytics.totalCount) * 100}%`,
+                              backgroundColor: item.color
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* Status Breakdown */}
+                <Card className="p-6 bg-white border-gray-200">
+                  <h3 className="text-lg font-bold text-black mb-6">Status Breakdown</h3>
+                  <div className="space-y-4">
+                    {analytics.pieData.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: item.color + '40', backgroundColor: item.color + '10' }}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="font-medium text-black">{item.name}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-black">{item.value}</div>
+                          <div className="text-xs text-gray-500">{((item.value / analytics.totalCount) * 100).toFixed(0)}%</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
             </div>
           )}
         </div>
