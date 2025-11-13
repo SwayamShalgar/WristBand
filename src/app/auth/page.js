@@ -165,7 +165,7 @@ export default function AuthPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-3">
             <button
               type="button"
               onClick={() => {
@@ -177,6 +177,16 @@ export default function AuthPage() {
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
+            
+            <div className="border-t border-gray-200 pt-3">
+              <a
+                href="/volunteer/auth"
+                className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <Activity className="w-4 h-4" />
+                Sign up as a Volunteer
+              </a>
+            </div>
           </div>
         </div>
 
