@@ -13,7 +13,7 @@ const nextConfig = {
     optimizeCss: true,
   },
   
-  // Configure headers for better caching
+  // Configure headers for better caching and security
   async headers() {
     return [
       {
